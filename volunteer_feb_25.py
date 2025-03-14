@@ -4,20 +4,15 @@ import numpy as np
 import pandas as pd 
 import seaborn as sns 
 import matplotlib.pyplot as plt 
-import plotly.figure_factory as ff
 import plotly.graph_objects as go
-from geopy.geocoders import Nominatim
-from folium.plugins import MousePosition
 import plotly.express as px
-import datetime
-import folium
 import os
 import sys
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
 from dash.development.base_component import Component
-# 'data/~$bmhc_data_2024_cleaned.xlsx'
+
 # print('System Version:', sys.version)
 # -------------------------------------- DATA ------------------------------------------- #
 
@@ -33,7 +28,7 @@ df = data.copy()
 df.columns = df.columns.str.strip()
 
 # Trim whitespace from values in all columns
-df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+# df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
 
 # Define a discrete color sequence
 # color_sequence = px.colors.qualitative.Plotly
@@ -44,7 +39,7 @@ df = df[df['Date of Activity'].dt.month == 2]
 
 # print(df.head(10))
 # print('Total Marketing Events: ', len(df))
-print('Column Names: \n', df.columns.to_list())
+# print('Column Names: \n', df.columns.to_list())
 # print('DF Shape:', df.shape)
 # print('Dtypes: \n', df.dtypes)
 # print('Info:', df.info())
@@ -57,20 +52,32 @@ print('Column Names: \n', df.columns.to_list())
 # ================================= Columns ================================= #
 
 Columns = [
-'Timestamp', 'Date of Activity', 'Activity status:', 'Person Submitting Form', 'Project Name:', 'Role:', 'Describe the software used:', 'What is the annual subscription cost for this software (if known):', 'Are there any associated licensing fees?', 'If yes, specify the cost and details:', 'Estimated savings from using this software (e.g. developer costs avoided):', 'What is the name of the project related to this contribution?', 
-'Briefly Describe the contributions:', 
-'Estimated direct costs for this project (if applicable):', 
-'Estimated labor hours contributed (if applicable):', 
-'Describe the work performed by students or volunteers:', 'Number of students/volunteers involved:', 
-'Total hours contributed this month:', 
-'Entity affiliated with (school, organization):',
-'Estimated dollar value of the work (e.g., hourly rate × hours worked):', 
-'Any additional details or clarifications regarding the contribution?', 'Activity duration (minutes):', 
-'Purpose of the activity (please only list one):', 
-'Brief description of activity:'
-    ] 
-
-
+    'Timestamp', 
+    'Date of Activity', 
+    'Activity duration (minutes):', 
+    'Total hours contributed this month:', 
+    'Activity status:', 
+    'Person Submitting Form', 
+    'Role:', 
+    'Entity affiliated with (school, organization):',
+    'Project Name:', 
+    'Brief description of activity:'
+    'Number of students/volunteers involved:', 
+    
+    'Describe the software used:', 
+    'What is the annual subscription cost for this software (if known):', 
+    'Are there any associated licensing fees?', 
+    'If yes, specify the cost and details:', 
+    'Estimated savings from using this software (e.g. developer costs avoided):', 
+    'What is the name of the project related to this contribution?', 
+    'Briefly Describe the contributions:', 
+    'Estimated direct costs for this project (if applicable):', 
+    'Estimated labor hours contributed (if applicable):', 
+    'Describe the work performed by students or volunteers:', 
+    'Estimated dollar value of the work (e.g., hourly rate × hours worked):', 
+    'Any additional details or clarifications regarding the contribution?',
+    'Purpose of the activity (please only list one):', 
+] 
 
 # =============================== Missing Values ============================ #
 
@@ -88,261 +95,220 @@ Columns = [
 # ========================= Total Developments ========================== #
 
 # Total number of engagements:
-total_developments = len(df)
+total_intern_events = len(df)
+# pritn('Total Intern Events:', total_intern)
 
-# -------------------------- Development Hours -------------------------- #
+# ========================== Volunteer Hours ========================== #
 
 # Sum of 'Activity Duration (minutes):' dataframe converted to hours:
-dev_hours = df['Activity duration (minutes):'].sum()/60
-dev_hours = round(dev_hours)
 
-# =================== Total Existing Partner Meetings =================== #
+df["Total hours contributed this month:"] = pd.to_numeric(df["Total hours contributed this month:"], errors='coerce')
+df["Total hours contributed this month:"] = df["Total hours contributed this month:"].fillna(0)
+v_hours = df['Total hours contributed this month:'].sum()
+v_hours = round(v_hours)
 
-df_existing_partner_meetings = df['Number of Existing Partner Meetings:'].sum()
-print('Total Existing Partner Meetings:', df_existing_partner_meetings)
+print('Total Volunteer Hours:', v_hours)
 
-# =================== Total New Partner Meetings =================== #
+# =================== Role =================== #
 
-df_new_partner_meetings = df['Number of New Partnership Meetings:'].sum()
-print('Total New Partner Meetings:', df_new_partner_meetings)
-
-# =================== Total Number of New Partners =================== #
-
-df_new_partners = df['Number of New Partners:'].sum()
-print('Total New Partners:', df_new_partners)
-
-# =================== Total Outreach Calls =================== #
-
-df_outreach_calls = df['Number of Outreach Calls:'].sum()
-print('Total Outreach Calls:', df_outreach_calls)
-
-# =================== Total Outreach Emails =================== #
-
-df_outreach_emails = df['Number of Outreach Emails:'].sum()
-print('Total Outreach Emails:', df_outreach_emails)
-
-# =================== Total Grants Searched =================== #
-
-df_grants_searched = df['Number of Grants Searched:'].sum()
-print('Total Grants Searched:', df_grants_searched)
-
-# =================== Total Grants Applied =================== #
-
-df_grants_applied = df['Number of Grants Applied:'].sum()
-print('Total Grants Applied:', df_grants_applied)
-
-# =========== Total Other Funding Opportunitites Searched ============ #
-
-df_funding_searched = df['Number of Other Funding Opportunities Searched:'].sum()
-print("Total Funding Sea", df_funding_searched)
-
-# =========== Total Other Funding Opportunities Applied ============ #
-
-df_funding_applied = df['Number of Other Funding Opportunities Applied:'].sum()
-print("Total Funding Applied", df_funding_applied)
-
-# =================== Total Community Events Attended =================== #
-
-df_community_events = df['Number of Community Events Attended:'].sum()
-print('Total Community Events Attended:', df_community_events)
-
-# =================== Total CRM Updates =================== #
-
-df_crm_updates = df['Number of CRM Updates:'].sum()
-print('Total CRM Updates:', df_crm_updates)
-
-# --------------------- Activity Status --------------------- #
-
-# "Activity Status" dataframe:
-df_activity_status = df.groupby('Activity Status').size().reset_index(name='Count')
-
-status_bar=px.bar(
-    df_activity_status,
-    x='Activity Status',
-    y='Count',
-    color='Activity Status',
-    text='Count',
-).update_layout(
-    height=460, 
-    width=780,
-    title=dict(
-        text='Activity Status',
-        x=0.5, 
-        font=dict(
-            size=25,
-            family='Calibri',
-            color='black',
-            )
-    ),
-    font=dict(
-        family='Calibri',
-        size=18,
-        color='black'
-    ),
-    xaxis=dict(
-        tickangle=0,  # Rotate x-axis labels for better readability
-        tickfont=dict(size=18),  # Adjust font size for the tick labels
-        title=dict(
-            # text=None,
-            text="Status",
-            font=dict(size=20),  # Font size for the title
-        ),
-        # showticklabels=False  # Hide x-tick labels
-        showticklabels=True  # Hide x-tick labels
-    ),
-    yaxis=dict(
-        title=dict(
-            text='Count',
-            font=dict(size=20),  # Font size for the title
-        ),
-    ),
-    legend=dict(
-        # title='Support',
-        title_text='',
-        orientation="v",  # Vertical legend
-        x=1.05,  # Position legend to the right
-        y=1,  # Position legend at the top
-        xanchor="left",  # Anchor legend to the left
-        yanchor="top",  # Anchor legend to the top
-        # visible=False
-        visible=True
-    ),
-    hovermode='closest', # Display only one hover label per trace
-    bargap=0.08,  # Reduce the space between bars
-    bargroupgap=0,  # Reduce space between individual bars in groups
-).update_traces(
-    textposition='auto',
-    hovertemplate='<b>Status:</b> %{label}<br><b>Count</b>: %{y}<extra></extra>'
-)
-
-# Person Pie Chart
-status_pie=px.pie(
-    df_activity_status,
-    names="Activity Status",
-    values='Count'  # Specify the values parameter
-).update_layout(
-    title='Activity Status',
-    title_x=0.5,
-    font=dict(
-        family='Calibri',
-        size=17,
-        color='black'
-    )
-).update_traces(
-    rotation=0,
-    textposition='auto',
-    textinfo='value+percent',
-    hovertemplate='<b>%{label} Status</b>: %{value}<extra></extra>',
-)
-
-# ========================= Select Activity ========================== #
-
-# Unique values:
-# print(df['Select Activity:'].unique())
-
-# Replace values in 'Select Activity:' column
-df['Select Activity:'] = (
-    df['Select Activity:']
-    .str.strip()
-    .replace(
-        {"Outreach": "Outreach", 
-        "Partnership": "Partnership", 
-        "Grants": "Grants",
-        "Funding": "Funding",
-        "Community": "Community",
-        "CRM": "CRM"}
-    )
-)
-
-# Group by 'Select Activity:' column
-df_activity = df.groupby('Select Activity:').size().reset_index(name='Count')
+df_role = df.groupby('Role:').size().reset_index(name='Count')
+# print(role_group.value_counts())
 
 # Bar Chart
-activity_bar=px.bar(
-    df_activity,
-    x='Select Activity:',
+role_bar = px.bar(
+    df_role,
+    x='Role:',
     y='Count',
-    color='Select Activity:',
+    color='Role:',
     text='Count',
 ).update_layout(
     height=460,
     width=780,
     title=dict(
-        text='Activity Type',
+        text='Roles',
         x=0.5,
-        font=dict(
-
-            size=25,
-            family='Calibri',
-            color='black',
-            )
+        font=dict(size=25, family='Calibri', color='black')
     ),
-    font=dict(
-        family='Calibri',
-        size=18,
-        color='black'
-    ),
+    font=dict(family='Calibri', size=18, color='black'),
     xaxis=dict(
-        tickangle=-15,  # Rotate x-axis labels for better readability
-        tickfont=dict(size=18),  # Adjust font size for the tick labels
+        tickangle=-15,
+        tickfont=dict(size=18),
         title=dict(
-            # text=None,
-            text="Activity",
-            font=dict(size=20),  # Font size for the title
-        ),
-        showticklabels=False  # Hide x-tick labels
-        # showticklabels=True  # Hide x-tick labels
+            # text="Role", 
+            text=None, 
+            font=dict(size=20)),
+        showticklabels=True  # Show x-axis labels for readability
     ),
     yaxis=dict(
-        title=dict(
-            text='Count',
-            font=dict(size=20),  # Font size for the title
-        ),
+        title=dict(text='Count', font=dict(size=20))
     ),
     legend=dict(
-        # title='Support',
-        title_text='',  # Title of the legend   
-        orientation="v",  # Vertical legend
-        x=1.05,  # Position legend to the right
-        y=1,  # Position legend at the top
-        xanchor="left",  # Anchor legend to the left
-        yanchor="top",  # Anchor legend to the top
-        # visible=False
+        title_text='',
+        orientation="v",
+        x=1.05,
+        y=1,
+        xanchor="left",
+        yanchor="top",
         visible=True
     ),
-    hovermode='closest', # Display only one hover label per trace
-    bargap=0.08,  # Reduce the space between bars
-    bargroupgap=0,  # Reduce space between individual bars in groups
+    hovermode='closest',
+    bargap=0.08,
+    bargroupgap=0,
 ).update_traces(
     textposition='auto',
-    hovertemplate='<b>Activity:</b> %{label}<br><b>Count</b>: %{y}<extra></extra>'
+    hovertemplate='<b>Role:</b> %{x}<br><b>Count:</b> %{y}<extra></extra>'
 )
 
-# Activity Pie Chart
-activity_pie=px.pie(
-    df_activity,
-    names="Select Activity:",
-    values='Count'  # Specify the values parameter
+# Pie Chart
+role_pie = px.pie(
+    df_role,
+    names="Role:",
+    values='Count'
 ).update_layout(
-    title='Activity Type Distribution',
+    title='Ratio of Roles',
     title_x=0.5,
-    font=dict(
-        family='Calibri',
-        size=17,
-        color='black'
-    )
+    font=dict(family='Calibri', size=17, color='black')
 ).update_traces(
     rotation=0,
-    textposition='auto',
+    textposition='inside',
     textinfo='value+percent',
-    hovertemplate='<b>%{label} Activity</b>: %{value}<extra></extra>',
+    hovertemplate='<b>Role:</b> %{label}<br><b>Count:</b> %{value}<extra></extra>',
+    pull=[0.05 if v < 5 else 0 for v in df_role["Count"]]  # Pull out small slices for visibility
 )
 
-# ------------------------ Person Submitting Form -------------------- #
+# =================== Entity Affiliated with =================== #
+
+df_affiliated = df.groupby('Entity affiliated with (school, organization):').size().reset_index(name='Count')
+# print(affiliated_group.value_counts())
+
+# Bar Chart
+affiliated_bar = px.bar(
+    df_affiliated,
+    x='Entity affiliated with (school, organization):',
+    y='Count',
+    color='Entity affiliated with (school, organization):',
+    text='Count'
+).update_layout(
+    height=460, 
+    width=780,
+    title=dict(
+        text='Entities Affiliated with',
+        x=0.5, 
+        font=dict(size=25, family='Calibri', color='black')
+    ),
+    font=dict(family='Calibri', size=18, color='black'),
+    xaxis=dict(
+        tickangle=-15,  
+        tickfont=dict(size=18),  
+        title=dict(text="Affiliated Entity", font=dict(size=20)),  
+        showticklabels=False  
+        # showticklabels=True  
+    ),
+    yaxis=dict(
+        title=dict(text='Count', font=dict(size=20))
+    ),
+    legend=dict(
+        title_text='',
+        orientation="v",
+        x=1.05, 
+        y=1, 
+        xanchor="left",
+        yanchor="top",
+        visible=True
+    ),
+    hovermode='closest',
+    bargap=0.08,
+    bargroupgap=0
+).update_traces(
+    textposition='auto',
+    hovertemplate='<b>Entity:</b> %{x}<br><b>Count:</b> %{y}<extra></extra>'
+)
+
+# Pie Chart
+affiliated_pie = px.pie(
+    df_affiliated,
+    names="Entity affiliated with (school, organization):",
+    values='Count'
+).update_layout(
+    title='Ratio of Entities Affiliated with',
+    title_x=0.5,
+    font=dict(family='Calibri', size=17, color='black')
+).update_traces(
+    rotation=0,
+    textposition='inside',
+    textinfo='value+percent',
+    hovertemplate='<b>Entity:</b> %{label}<br><b>Count:</b> %{value}<extra></extra>',
+    pull=[0.05 if v < 5 else 0 for v in df_affiliated["Count"]]  # Slightly separate small slices
+)
+
+# =================== Project Name =================== #
+
+df_project = df.groupby('Project Name:').size().reset_index(name='Count')
+# print(project_group.value_counts())
+
+# Bar Chart
+project_bar = px.bar(
+    df_project,
+    x='Project Name:',
+    y='Count',
+    color='Project Name:',
+    text='Count',
+).update_layout(
+    height=460,
+    width=780,
+    title=dict(
+        text='Projects Worked on',
+        x=0.5,
+        font=dict(size=25, family='Calibri', color='black')
+    ),
+    font=dict(family='Calibri', size=18, color='black'),
+    xaxis=dict(
+        tickangle=-15,
+        tickfont=dict(size=18),
+        title=dict(text="Project Name", font=dict(size=20)),
+        showticklabels=False
+        # showticklabels=True  # Show x-axis labels for readability
+    ),
+    yaxis=dict(
+        title=dict(text='Count', font=dict(size=20))
+    ),
+    legend=dict(
+        title_text='',
+        orientation="v",
+        x=1.05,
+        y=1,
+        xanchor="left",
+        yanchor="top",
+        visible=True
+    ),
+    hovermode='closest',
+    bargap=0.08,
+    bargroupgap=0,
+).update_traces(
+    textposition='auto',
+    hovertemplate='<b>Project Name:</b> %{x}<br><b>Count:</b> %{y}<extra></extra>'
+)
+
+# Pie Chart
+project_pie = px.pie(
+    df_project,
+    names="Project Name:",
+    values='Count'
+).update_layout(
+    title='Ratio of Projects Worked on',
+    title_x=0.5,
+    font=dict(family='Calibri', size=17, color='black')
+).update_traces(
+    rotation=0,
+    textposition='inside',
+    textinfo='value+percent',
+    hovertemplate='<b>Project Name:</b> %{label}<br><b>Count:</b> %{value}<extra></extra>',
+    pull=[0.05 if v < 5 else 0 for v in df_project["Count"]]  # Pull out small slices for visibility
+)
+
+# =================== Person Submitting Form =================== #
 
 #  Unique values:
-
-
 
 # df['Person submitting this form:'] = (
 #     df['Person submitting this form:']
@@ -383,12 +349,12 @@ person_bar=px.bar(
         tickangle=-15,  # Rotate x-axis labels for better readability
         tickfont=dict(size=18),  # Adjust font size for the tick labels
         title=dict(
-            # text=None,
-            text="Name",
+            text=None,
+            # text="Name",
             font=dict(size=20),  # Font size for the title
         ),
-        showticklabels=False  # Hide x-tick labels
-        # showticklabels=True  # Hide x-tick labels
+        # showticklabels=False  # Hide x-tick labels
+        showticklabels=True  # Hide x-tick labels
     ),
     yaxis=dict(
         title=dict(
@@ -412,8 +378,10 @@ person_bar=px.bar(
     bargroupgap=0,  # Reduce space between individual bars in groups
 ).update_traces(
     textposition='auto',
-    hovertemplate='<b>Name:</b> %{label}<br><b>Count</b>: %{y}<extra></extra>'
+    hovertemplate='<b>Name:</b> %{x}<br><b>Count</b>: %{y}<extra></extra>'
 )
+
+pull=[0.05 if v < 5 else 0 for v in df_person["Count"]]  # Pull out small slices
 
 # Person Pie Chart
 person_pie=px.pie(
@@ -429,10 +397,11 @@ person_pie=px.pie(
         color='black'
     )
 ).update_traces(
+    pull=pull,
     rotation=0,
     textposition='auto',
     textinfo='value+percent',
-    hovertemplate='<b>%{label} Status</b>: %{value}<extra></extra>',
+    hovertemplate='<b>Name:</b> %{label}<br><b>Count:</b> %{value}<extra></extra>',
 )
 
 # # ========================== DataFrame Table ========================== #
@@ -480,14 +449,14 @@ app.layout = html.Div(
         html.Div(
             className='divv', 
             children=[ 
-                html.H1('Business Development Report', className='title'),
+                html.H1('Intern/ Volunteer/ InKind Report', className='title'),
                 html.H1('February 2025', className='title2'),
                 html.Div(
                     className='btn-box', 
                     children=[
                         html.A(
                             'Repo',
-                            href='https://github.com/CxLos/Bus_Dev_Feb_2025',
+                            href='https://github.com/CxLos/Volunteer_Feb_2025',
                             className='btn'
                         )
                     ]
@@ -496,63 +465,25 @@ app.layout = html.Div(
         ),
         
         # # Data Table
-        # html.Div(
-        #     className='row0',
-        #     children=[
-        #         html.Div(
-        #             className='table',
-        #             children=[
-        #                 html.H1(
-        #                     className='table-title',
-        #                     children='Business Development Data Table'
-        #                 )
-        #             ]
-        #         ),
-        #         html.Div(
-        #             className='table2', 
-        #             children=[
-        #                 dcc.Graph(
-        #                     className='data',
-        #                     figure=dev_table
-        #                 )
-        #             ]
-        #         )
-        #     ]
-        # ),
-
         html.Div(
-            className='row1',
+            className='row0',
             children=[
                 html.Div(
-                    className='graph11',
+                    className='table',
                     children=[
-                        html.Div(className='high1', 
-                                 children=['Total Developments']),
-                        html.Div(
-                            className='circle1',
-                            children=[
-                                html.Div(
-                                    className='hilite',
-                                    children=[html.H1(className='high2', 
-                                                      children=[total_developments])]
-                                )
-                            ]
+                        html.H1(
+                            className='table-title',
+                            children='Intern/ Volunteer/ InKind Data Table'
                         )
                     ]
                 ),
                 html.Div(
-                    className='graph22',
+                    className='table2', 
                     children=[
-                        html.Div(className='high3', children=['Development Hours']),
-                        html.Div(
-                            className='circle2',
-                            children=[
-                                html.Div(
-                                    className='hilite',
-                                    children=[html.H1(className='high4', children=[dev_hours])]
-                                )
-                            ]
-                        ) 
+                        dcc.Graph(
+                            className='data',
+                            figure=dev_table
+                        )
                     ]
                 )
             ]
@@ -565,14 +496,14 @@ app.layout = html.Div(
                     className='graph11',
                     children=[
                         html.Div(className='high1', 
-                                 children=['Existing Partner Meetings']),
+                                 children=['Total Volunteering Events']),
                         html.Div(
                             className='circle1',
                             children=[
                                 html.Div(
                                     className='hilite',
                                     children=[html.H1(className='high2', 
-                                                      children=[df_existing_partner_meetings])]
+                                                      children=[total_intern_events])]
                                 )
                             ]
                         )
@@ -581,204 +512,13 @@ app.layout = html.Div(
                 html.Div(
                     className='graph22',
                     children=[
-                        html.Div(className='high3', children=['New Partner Meetings']),
+                        html.Div(className='high3', children=['Volunteer Hours']),
                         html.Div(
                             className='circle2',
                             children=[
                                 html.Div(
                                     className='hilite',
-                                    children=[html.H1(className='high4', 
-                                                      children=[df_new_partner_meetings])]
-                                )
-                            ]
-                        ) 
-                    ]
-                )
-            ]
-        ),
-
-        html.Div(
-            className='row1',
-            children=[
-                html.Div(
-                    className='graph11',
-                    children=[
-                        html.Div(className='high1', 
-                                 children=['New Partners']),
-                        html.Div(
-                            className='circle1',
-                            children=[
-                                html.Div(
-                                    className='hilite',
-                                    children=[html.H1(className='high2', 
-                                                      children=[df_new_partners])]
-                                )
-                            ]
-                        )
-                    ]
-                ),
-                html.Div(
-                    className='graph22',
-                    children=[
-                        html.Div(className='high3', children=['Blank']),
-                        html.Div(
-                            className='circle2',
-                            children=[
-                                html.Div(
-                                    className='hilite',
-                                    children=[html.H1(className='high4', children=[])]
-                                )
-                            ]
-                        ) 
-                    ]
-                )
-            ]
-        ),
-
-        html.Div(
-            className='row1',
-            children=[
-                html.Div(
-                    className='graph11',
-                    children=[
-                        html.Div(className='high1', 
-                                 children=['Outreach Calls']),
-                        html.Div(
-                            className='circle1',
-                            children=[
-                                html.Div(
-                                    className='hilite',
-                                    children=[html.H1(className='high2', 
-                                                      children=[df_outreach_calls])]
-                                )
-                            ]
-                        )
-                    ]
-                ),
-                html.Div(
-                    className='graph22',
-                    children=[
-                        html.Div(className='high3', children=['Outreach Emails']),
-                        html.Div(
-                            className='circle2',
-                            children=[
-                                html.Div(
-                                    className='hilite',
-                                    children=[html.H1(className='high4', children=[df_outreach_emails])]
-                                )
-                            ]
-                        ) 
-                    ]
-                )
-            ]
-        ),
-
-        html.Div(
-            className='row1',
-            children=[
-                html.Div(
-                    className='graph11',
-                    children=[
-                        html.Div(className='high1', 
-                                 children=['Grants Searched']),
-                        html.Div(
-                            className='circle1',
-                            children=[
-                                html.Div(
-                                    className='hilite',
-                                    children=[html.H1(className='high2', 
-                                                      children=[df_grants_searched])]
-                                )
-                            ]
-                        )
-                    ]
-                ),
-                html.Div(
-                    className='graph22',
-                    children=[
-                        html.Div(className='high3', children=['Grants Applied']),
-                        html.Div(
-                            className='circle2',
-                            children=[
-                                html.Div(
-                                    className='hilite',
-                                    children=[html.H1(className='high4', children=[df_grants_applied])]
-                                )
-                            ]
-                        ) 
-                    ]
-                )
-            ]
-        ),
-
-        html.Div(
-            className='row1',
-            children=[
-                html.Div(
-                    className='graph11',
-                    children=[
-                        html.Div(className='high1', 
-                                 children=['Funding Opportunities Searched']),
-                        html.Div(
-                            className='circle1',
-                            children=[
-                                html.Div(
-                                    className='hilite',
-                                    children=[html.H1(className='high2', 
-                                                      children=[df_funding_searched])]
-                                )
-                            ]
-                        )
-                    ]
-                ),
-                html.Div(
-                    className='graph22',
-                    children=[
-                        html.Div(className='high3', children=['Funding Opportunitites Applied']),
-                        html.Div(
-                            className='circle2',
-                            children=[
-                                html.Div(
-                                    className='hilite',
-                                    children=[html.H1(className='high4', children=[df_funding_applied])]
-                                )
-                            ]
-                        ) 
-                    ]
-                )
-            ]
-        ),
-
-        html.Div(
-            className='row1',
-            children=[
-                html.Div(
-                    className='graph11',
-                    children=[
-                        html.Div(className='high1', 
-                                 children=['Commuminity Events Attended']),
-                        html.Div(
-                            className='circle1',
-                            children=[
-                                html.Div(
-                                    className='hilite',
-                                    children=[html.H1(className='high2', 
-                                                      children=[df_community_events])]
-                                )
-                            ]
-                        )
-                    ]
-                ),
-                html.Div(
-                    className='graph22',
-                    children=[
-                        html.Div(className='high3', children=['CRM Updates']),
-                        html.Div(
-                            className='circle2',
-                            children=[
-                                html.Div(
-                                    className='hilite',
-                                    children=[html.H1(className='high4', children=[df_crm_updates])]
+                                    children=[html.H1(className='high4', children=[v_hours])]
                                 )
                             ]
                         ) 
@@ -794,7 +534,7 @@ app.layout = html.Div(
                     className='graph1',
                     children=[
                         dcc.Graph(
-                            figure=status_bar
+                            figure=role_bar
                         )
                     ]
                 ),
@@ -802,7 +542,7 @@ app.layout = html.Div(
                     className='graph2',
                     children=[
                         dcc.Graph(
-                            figure=status_pie
+                            figure=role_pie
                         )
                     ]
                 )
@@ -816,7 +556,7 @@ app.layout = html.Div(
                     className='graph1',
                     children=[
                         dcc.Graph(
-                            figure=activity_bar
+                            figure=affiliated_bar
                         )
                     ]
                 ),
@@ -824,7 +564,29 @@ app.layout = html.Div(
                     className='graph2',
                     children=[
                         dcc.Graph(
-                            figure=activity_pie
+                            figure=affiliated_pie
+                        )
+                    ]
+                )
+            ]
+        ),   
+
+        html.Div(
+            className='row3',
+            children=[
+                html.Div(
+                    className='graph1',
+                    children=[
+                        dcc.Graph(
+                            figure=project_bar
+                        )
+                    ]
+                ),
+                html.Div(
+                    className='graph2',
+                    children=[
+                        dcc.Graph(
+                            figure=project_pie
                         )
                     ]
                 )
