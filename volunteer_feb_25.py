@@ -134,8 +134,8 @@ role_bar = px.bar(
         tickangle=-15,
         tickfont=dict(size=18),
         title=dict(
-            # text="Role", 
-            text=None, 
+            text="Role", 
+            # text=None, 
             font=dict(size=20)),
         showticklabels=True  # Show x-axis labels for readability
     ),
@@ -243,6 +243,24 @@ affiliated_pie = px.pie(
 
 # =================== Project Name =================== #
 
+# unique values:
+print(df["Project Name:"].unique())
+
+p_unique = [
+ 'Americorp-BMHC ',
+ 'AmeriCorps Job Descriptions'
+ 'BMHC Business Plan + Navigation + Americorps '
+ 'BHMC (a) Americorps Grant application; (b) Update demographic numbers for certain populations'
+ ]
+
+df['Project Name:'] = (
+    df['Project Name:']
+    .str.strip()
+    .replace({
+    "BHMC (a) Americorps Grant application; (b) Update demographic numbers for certain populations": "Americorps Grant application", 
+    })
+)
+
 df_project = df.groupby('Project Name:').size().reset_index(name='Count')
 # print(project_group.value_counts())
 
@@ -255,7 +273,7 @@ project_bar = px.bar(
     text='Count',
 ).update_layout(
     height=460,
-    width=780,
+    width=900,
     title=dict(
         text='Projects Worked on',
         x=0.5,
